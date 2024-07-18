@@ -106,6 +106,13 @@ class DeterministicP256Test {
                                                         counter = 1
                                         )
 
+                        // Check generated public key against hardcoded value
+                        assertEquals(
+                                        keyPair.public.encoded.contentToString(),
+                                        "[48, 89, 48, 19, 6, 7, 42, -122, 72, -50, 61, 2, 1, 6, 8, 42, -122, 72, -50, 61, 3, 1, 7, 3, 66, 0, 4, 86, 92, -71, 97, 28, 114, -49, -54, -69, -121, -44, -31, 76, 56, -37, -90, -32, 126, -55, 73, -44, -126, -111, -91, -92, 82, 42, -8, 50, -104, 75, 10, -10, 95, -14, 126, -34, 66, -113, 12, 77, -3, 7, -35, -73, 38, 7, -65, -128, 53, 33, 60, -52, 113, -30, -41, 7, -107, -89, 0, -61, 9, -35, -55]",
+                                        "Public key should match hardcoded value!"
+                        )
+
                         // Check default counter value and that the same key is generated
                         // deterministically
                         // twice in a row
