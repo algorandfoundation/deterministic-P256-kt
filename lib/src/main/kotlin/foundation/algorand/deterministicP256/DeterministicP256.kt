@@ -23,7 +23,8 @@ import java.security.MessageDigest
 import java.security.SecureRandom
 import java.security.Signature
 import java.security.interfaces.ECPrivateKey
-import java.security.spec.*
+import java.security.spec.ECGenParameterSpec
+import java.security.spec.KeySpec
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
