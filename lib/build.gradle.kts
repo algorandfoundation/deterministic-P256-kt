@@ -25,6 +25,9 @@ dependencies {
     // Credentials
     implementation("androidx.credentials:credentials:1.2.2")
 
+    // BIP 39
+    implementation("cash.z.ecc.android:kotlin-bip39:1.0.8")
+
     // Use the Kotlin JUnit 5 integration.
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 
@@ -41,5 +44,8 @@ dependencies {
 }
 
 tasks.withType<Test> {
-     useJUnitPlatform()
+    useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+    }
 }
