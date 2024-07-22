@@ -51,7 +51,7 @@ class DeterministicP256 {
         fun genRootSeedWithBIP39(
                         phrase: String,
                         salt: ByteArray = "liquid".toByteArray(),
-                        iterationCount: Int = 6000000,
+                        iterationCount: Int = 600_000,
                         keyLength: Int = 512
         ): ByteArray {
                 MnemonicCode(phrase).validate()
