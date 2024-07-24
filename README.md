@@ -100,6 +100,10 @@ Download/clone the repository, and with gradle setup run `./gradlew build` from 
 
 To only run the tests: `./gradlew test`.
 
+This is an Android library and requires the ANDROID_HOME environment variable to be set, pointing to a valid SDK location. Alternatively, `sdk.dir` can be set in a local.properties to do the same.
+
+For more information, refer to [the Android developer documentation](https://developer.android.com/tools/variables).
+
 # LICENSE
 
 Copyright 2024 Algorand Foundation
