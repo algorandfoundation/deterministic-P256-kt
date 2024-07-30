@@ -18,3 +18,16 @@ jobs:
         uses: gradle/gradle-build-action@v2
       - name: Build with Gradle
         run: ./gradlew build
+      - name: Generate kover coverage report
+        run: ./gradlew koverXmlReport
+      - name: Add coverage report to PR
+        id: kover
+        uses: mi-kas/kover-report@v1
+        with:
+          path: |
+            ${{ github.workspace }}/lib/build/reports/kover/report.xml
+          title: Code Coverage
+          update-comment: true
+          min-coverage-overall: 80
+          min-coverage-changed-files: 80
+          coverage-counter-type: LINE
