@@ -1,31 +1,12 @@
 plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
+    kotlin("jvm")
     id("org.jetbrains.kotlinx.kover") version "0.8.3"
 }
 
-android {
-    namespace = "foundation.algorand.deterministicP256"
-    compileSdk = 34
-
-    defaultConfig {
-        minSdk = 24
-        targetSdk = 34
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}   
+group = "foundation.algorand"
+version = "1.0-SNAPSHOT"
 
 dependencies {
-    // Credentials
-    implementation("androidx.credentials:credentials:1.2.2")
-
     // BIP 39
     implementation("cash.z.ecc.android:kotlin-bip39:1.0.8")
 
@@ -33,15 +14,26 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 
     // Use the JUnit 5 integration.
-    testImplementation(libs.junit.jupiter.engine)
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // This dependency is exported to consumers, that is to say found on their compile classpath.
-    api(libs.commons.math3)
+    api("org.apache.commons:commons-math3:3.6.1")
 
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
-    implementation(libs.guava)
+    implementation("com.google.guava:guava:31.0.1-jre")
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+tasks.withType<JavaCompile> {
+    sourceCompatibility = "1.8"
+    targetCompatibility = "1.8"
 }
 
 tasks.withType<Test> {

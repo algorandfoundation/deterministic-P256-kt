@@ -14,7 +14,6 @@
  */
 package foundation.algorand.deterministicP256
 
-import android.security.keystore.KeyProperties
 import cash.z.ecc.android.bip39.Mnemonics.MnemonicCode
 import java.nio.ByteBuffer
 import java.security.KeyPair
@@ -49,10 +48,10 @@ import javax.crypto.spec.PBEKeySpec
 class DeterministicP256 {
         /** genRootSeedWithBIP39 - wrapper around genRootSeed that validates the BIP39 phrase. */
         fun genRootSeedWithBIP39(
-                        phrase: String,
-                        salt: ByteArray = "liquid".toByteArray(),
-                        iterationCount: Int = 600_000,
-                        keyLength: Int = 512
+                phrase: String,
+                salt: ByteArray = "liquid".toByteArray(),
+                iterationCount: Int = 600_000,
+                keyLength: Int = 512
         ): ByteArray {
                 MnemonicCode(phrase).validate()
                 return genRootSeed(phrase.toCharArray(), salt, iterationCount, keyLength)
@@ -60,10 +59,10 @@ class DeterministicP256 {
 
         /** genRootSeed - generates a root seed from a char array using PBKDF2-HMAC-SHA512. */
         private fun genRootSeed(
-                        entropy: CharArray,
-                        salt: ByteArray,
-                        iterationCount: Int,
-                        keyLength: Int
+                entropy: CharArray,
+                salt: ByteArray,
+                iterationCount: Int,
+                keyLength: Int
         ): ByteArray {
                 val keySpec: KeySpec = PBEKeySpec(entropy, salt, iterationCount, keyLength)
                 val keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512")
@@ -75,21 +74,20 @@ class DeterministicP256 {
          * userid and counter
          */
         fun genDomainSpecificKeypair(
-                        rootSeed: ByteArray,
-                        origin: String,
-                        userId: String,
-                        counter: Int = 0
+                rootSeed: ByteArray,
+                origin: String,
+                userId: String,
+                counter: Int = 0
         ): KeyPair {
                 val digest = MessageDigest.getInstance("SHA-512")
                 val concat =
-                                rootSeed +
-                                                origin.toByteArray() +
-                                                userId.toByteArray() +
-                                                ByteBuffer.allocate(4).putInt(counter).array()
+                        rootSeed +
+                                origin.toByteArray() +
+                                userId.toByteArray() +
+                                ByteBuffer.allocate(4).putInt(counter).array()
                 val seed = digest.digest(concat)
 
-                val generator: KeyPairGenerator =
-                                KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC)
+                val generator: KeyPairGenerator = KeyPairGenerator.getInstance("EC")
 
                 generator.initialize(ECGenParameterSpec("secp256r1"), FixedSecureRandom(seed))
                 return generator.generateKeyPair()
