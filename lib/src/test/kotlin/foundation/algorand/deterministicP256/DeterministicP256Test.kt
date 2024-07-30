@@ -40,28 +40,28 @@ class DeterministicP256Test {
                 @Test
                 fun validSeedPhraseTest() {
                         val rootSeed =
-                                        D.genRootSeedWithBIP39(
-                                                        "salon zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice"
-                                        )
+                                D.genRootSeedWithBIP39(
+                                        "salon zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice"
+                                )
 
                         assertEquals(
-                                        rootSeed.contentToString(),
-                                        "[-87, 35, 83, 123, -109, 61, 98, 116, -35, 56, -80, -101, 108, -51, 5, -62, 85, 56, -100, 40, -74, 57, 121, 85, -30, -16, 37, -32, 34, -102, -113, 28, 111, -3, -96, 88, -36, 119, -1, 18, 63, -85, 78, 83, -73, -68, -79, -69, 64, -120, -69, 58, -26, 94, -83, 119, -66, -88, -76, -8, -83, -67, 58, -6]"
+                                rootSeed.contentToString(),
+                                "[-87, 35, 83, 123, -109, 61, 98, 116, -35, 56, -80, -101, 108, -51, 5, -62, 85, 56, -100, 40, -74, 57, 121, 85, -30, -16, 37, -32, 34, -102, -113, 28, 111, -3, -96, 88, -36, 119, -1, 18, 63, -85, 78, 83, -73, -68, -79, -69, 64, -120, -69, 58, -26, 94, -83, 119, -66, -88, -76, -8, -83, -67, 58, -6]"
                         )
 
                         // Test default parameters
                         val rootSeedFixedParams =
-                                        D.genRootSeedWithBIP39(
-                                                        phrase =
-                                                                        "salon zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice",
-                                                        salt = "liquid".toByteArray(),
-                                                        iterationCount = 600_000,
-                                                        keyLength = 512
-                                        )
+                                D.genRootSeedWithBIP39(
+                                        phrase =
+                                                "salon zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice",
+                                        salt = "liquid".toByteArray(),
+                                        iterationCount = 600_000,
+                                        keyLength = 512
+                                )
 
                         assertEquals(
-                                        rootSeed.contentToString(),
-                                        rootSeedFixedParams.contentToString()
+                                rootSeed.contentToString(),
+                                rootSeedFixedParams.contentToString()
                         )
                 }
 
@@ -69,12 +69,12 @@ class DeterministicP256Test {
                 fun invalidSeedPhrasesTest() {
                         assertFailsWith<ChecksumException> {
                                 D.genRootSeedWithBIP39(
-                                                "zoo zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice"
+                                        "zoo zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice"
                                 )
                         }
                         assertFailsWith<InvalidWordException> {
                                 D.genRootSeedWithBIP39(
-                                                "algorand zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice"
+                                        "algorand zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice"
                                 )
                         }
                 }
@@ -82,9 +82,9 @@ class DeterministicP256Test {
                 @Test
                 fun keyPairGenerationTest() {
                         val rootSeed =
-                                        D.genRootSeedWithBIP39(
-                                                        "salon zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice"
-                                        )
+                                D.genRootSeedWithBIP39(
+                                        "salon zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice"
+                                )
 
                         // Example values taken from: https://webauthn.guide/#registration
                         val origin = "https://webauthn.guide"
@@ -92,55 +92,40 @@ class DeterministicP256Test {
 
                         val keyPair = D.genDomainSpecificKeypair(rootSeed, origin, userId)
                         val keyPair0 =
-                                        D.genDomainSpecificKeypair(
-                                                        rootSeed,
-                                                        origin,
-                                                        userId,
-                                                        counter = 0
-                                        )
+                                D.genDomainSpecificKeypair(rootSeed, origin, userId, counter = 0)
                         val keyPair1 =
-                                        D.genDomainSpecificKeypair(
-                                                        rootSeed,
-                                                        origin,
-                                                        userId,
-                                                        counter = 1
-                                        )
+                                D.genDomainSpecificKeypair(rootSeed, origin, userId, counter = 1)
 
                         // Check generated public key against hardcoded value
                         assertEquals(
-                                        keyPair.public.encoded.contentToString(),
-                                        "[48, 89, 48, 19, 6, 7, 42, -122, 72, -50, 61, 2, 1, 6, 8, 42, -122, 72, -50, 61, 3, 1, 7, 3, 66, 0, 4, -50, -16, 75, 50, -59, 86, 33, 17, -106, 99, 39, -71, -44, 13, 21, -111, 69, -93, 45, 57, 53, 96, -76, -57, 1, -93, 39, 101, -106, -59, -34, 98, -47, -47, -65, 104, 60, 70, -47, 46, 112, 24, -79, 76, -13, 57, 42, -4, -8, -55, 109, -13, -74, -39, 38, 5, 36, 47, -82, 18, -116, -30, -44, 43]",
-                                        "Public key should match hardcoded value!"
+                                keyPair.public.encoded.contentToString(),
+                                "[48, 89, 48, 19, 6, 7, 42, -122, 72, -50, 61, 2, 1, 6, 8, 42, -122, 72, -50, 61, 3, 1, 7, 3, 66, 0, 4, -50, -16, 75, 50, -59, 86, 33, 17, -106, 99, 39, -71, -44, 13, 21, -111, 69, -93, 45, 57, 53, 96, -76, -57, 1, -93, 39, 101, -106, -59, -34, 98, -47, -47, -65, 104, 60, 70, -47, 46, 112, 24, -79, 76, -13, 57, 42, -4, -8, -55, 109, -13, -74, -39, 38, 5, 36, 47, -82, 18, -116, -30, -44, 43]",
+                                "Public key should match hardcoded value!"
                         )
 
                         // Check default counter value and that the same key is generated
                         // deterministically
                         // twice in a row
                         assertEquals(
-                                        keyPair.public.toString(),
-                                        keyPair0.public.toString(),
-                                        "Keys with the same counter value should be the same!"
+                                keyPair.public.toString(),
+                                keyPair0.public.toString(),
+                                "Keys with the same counter value should be the same!"
                         )
 
                         // Check that different counter values produce different keys
                         assertNotEquals(
-                                        keyPair.public.toString(),
-                                        keyPair1.public.toString(),
-                                        "Keys with different counter values should be different!"
+                                keyPair.public.toString(),
+                                keyPair1.public.toString(),
+                                "Keys with different counter values should be different!"
                         )
 
                         // Additional check of the same key generation
                         assertEquals(
-                                        keyPair1.public.toString(),
-                                        D.genDomainSpecificKeypair(
-                                                                        rootSeed,
-                                                                        origin,
-                                                                        userId,
-                                                                        counter = 1
-                                                        )
-                                                        .public
-                                                        .toString(),
-                                        "Keys with the same counter value should be the same!"
+                                keyPair1.public.toString(),
+                                D.genDomainSpecificKeypair(rootSeed, origin, userId, counter = 1)
+                                        .public
+                                        .toString(),
+                                "Keys with the same counter value should be the same!"
                         )
 
                         val message = "Hello, World!".toByteArray()
@@ -155,6 +140,57 @@ class DeterministicP256Test {
                         sig.initVerify(keyPair.public as ECPublicKey)
                         sig.update(message)
                         assertTrue(sig.verify(signature), "Signature should be valid!")
+                }
+        }
+
+        @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+        internal class fixedSecureRandomTest {
+
+                @Test
+                fun testNextBytes() {
+                        val fixedValue = byteArrayOf(1, 2, 3, 4, 5)
+                        val secureRandom = FixedSecureRandom(fixedValue)
+
+                        val bytes1 = ByteArray(3)
+                        secureRandom.nextBytes(bytes1)
+                        assertEquals(
+                                fixedValue.sliceArray(0..2).contentToString(),
+                                bytes1.contentToString()
+                        )
+
+                        val bytes2 = ByteArray(2)
+                        secureRandom.nextBytes(bytes2)
+                        assertEquals(
+                                fixedValue.sliceArray(3..4).contentToString(),
+                                bytes2.contentToString()
+                        )
+
+                        val bytes3 = byteArrayOf(9, 9, 9, 9, 9)
+                        secureRandom.nextBytes(
+                                bytes3
+                        ) // fixedValue has been exhausted so bytes3 should be unchanged
+                        assertEquals(
+                                byteArrayOf(9, 9, 9, 9, 9).contentToString(),
+                                bytes3.contentToString()
+                        )
+                }
+
+                @Test
+                fun testGenerateSeed() {
+                        val fixedValue = byteArrayOf(1, 2, 3, 4, 5)
+                        val secureRandom = FixedSecureRandom(fixedValue)
+
+                        val seed = secureRandom.generateSeed(4)
+                        assertEquals(
+                                byteArrayOf(1, 2, 3, 4).contentToString(),
+                                seed.contentToString()
+                        )
+
+                        val seed2 = secureRandom.generateSeed(4)
+                        assertEquals(
+                                byteArrayOf(5, 0, 0, 0).contentToString(),
+                                seed2.contentToString()
+                        ) // 0 because fixedValue is exhausted
                 }
         }
 }
