@@ -46,19 +46,22 @@ import javax.crypto.spec.PBEKeySpec
  * storage using some secure storage mechanism.
  */
 class DeterministicP256 {
-        /** genRootSeedWithBIP39 - wrapper around genRootSeed that validates the BIP39 phrase. */
-        fun genRootSeedWithBIP39(
+        /**
+         * genDerivedMainKeyWithBIP39 - wrapper around genDerivedMainKey that validates the BIP39
+         * phrase.
+         */
+        fun genDerivedMainKeyWithBIP39(
                 phrase: String,
                 salt: ByteArray = "liquid".toByteArray(),
                 iterationCount: Int = 600_000,
                 keyLength: Int = 512
         ): ByteArray {
                 MnemonicCode(phrase).validate()
-                return genRootSeed(phrase.toCharArray(), salt, iterationCount, keyLength)
+                return genDerivedMainKey(phrase.toCharArray(), salt, iterationCount, keyLength)
         }
 
-        /** genRootSeed - generates a root seed from a char array using PBKDF2-HMAC-SHA512. */
-        private fun genRootSeed(
+        /** genDerivedMainKey - generates a root seed from a char array using PBKDF2-HMAC-SHA512. */
+        private fun genDerivedMainKey(
                 entropy: CharArray,
                 salt: ByteArray,
                 iterationCount: Int,
@@ -74,14 +77,14 @@ class DeterministicP256 {
          * userid and counter
          */
         fun genDomainSpecificKeypair(
-                rootSeed: ByteArray,
+                derivedMainKey: ByteArray,
                 origin: String,
                 userId: String,
                 counter: Int = 0
         ): KeyPair {
                 val digest = MessageDigest.getInstance("SHA-512")
                 val concat =
-                        rootSeed +
+                        derivedMainKey +
                                 origin.toByteArray() +
                                 userId.toByteArray() +
                                 ByteBuffer.allocate(4).putInt(counter).array()
@@ -113,9 +116,9 @@ class DeterministicP256 {
  * This allows us to deterministically generate keypairs from e.g. a BIP39 phrase. Normally it is
  * NOT recommended to generate keypairs from a "broken" SecureRandom implementation as we do, but in
  * our case: 1) we need it to be deterministic, across platforms 2) we are assuming that the
- * underlying BIP39 phrase was generated securely randomly for the rootSeed 3) we are relying on a
- * PBKDF2-HMAC-SHA512 to further harden that rootSeed even more and create separation, 4) each
- * keyPair's seed is a hashed concatenatino of the rootSeed, origin, userId, and counter.
+ * underlying BIP39 phrase was generated securely randomly for the derivedMainKey 3) we are relying
+ * on a PBKDF2-HMAC-SHA512 to further harden that derivedMainKey even more and create separation, 4)
+ * each keyPair's seed is a hashed concatenatino of the derivedMainKey, origin, userId, and counter.
  *
  * The assumption is that the combination of 2 & 3 & 4 creates enough random entropy to make it safe
  * to generate P-256 keypairs in this way.

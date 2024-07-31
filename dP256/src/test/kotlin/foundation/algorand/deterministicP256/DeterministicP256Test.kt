@@ -39,19 +39,19 @@ class DeterministicP256Test {
 
                 @Test
                 fun validSeedPhraseTest() {
-                        val rootSeed =
-                                D.genRootSeedWithBIP39(
+                        val DerivedMainKey =
+                                D.genDerivedMainKeyWithBIP39(
                                         "salon zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice"
                                 )
 
                         assertEquals(
-                                rootSeed.contentToString(),
+                                DerivedMainKey.contentToString(),
                                 "[-87, 35, 83, 123, -109, 61, 98, 116, -35, 56, -80, -101, 108, -51, 5, -62, 85, 56, -100, 40, -74, 57, 121, 85, -30, -16, 37, -32, 34, -102, -113, 28, 111, -3, -96, 88, -36, 119, -1, 18, 63, -85, 78, 83, -73, -68, -79, -69, 64, -120, -69, 58, -26, 94, -83, 119, -66, -88, -76, -8, -83, -67, 58, -6]"
                         )
 
                         // Test default parameters
-                        val rootSeedFixedParams =
-                                D.genRootSeedWithBIP39(
+                        val DerivedMainKeyFixedParams =
+                                D.genDerivedMainKeyWithBIP39(
                                         phrase =
                                                 "salon zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice",
                                         salt = "liquid".toByteArray(),
@@ -60,20 +60,20 @@ class DeterministicP256Test {
                                 )
 
                         assertEquals(
-                                rootSeed.contentToString(),
-                                rootSeedFixedParams.contentToString()
+                                DerivedMainKey.contentToString(),
+                                DerivedMainKeyFixedParams.contentToString()
                         )
                 }
 
                 @Test
                 fun invalidSeedPhrasesTest() {
                         assertFailsWith<ChecksumException> {
-                                D.genRootSeedWithBIP39(
+                                D.genDerivedMainKeyWithBIP39(
                                         "zoo zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice"
                                 )
                         }
                         assertFailsWith<InvalidWordException> {
-                                D.genRootSeedWithBIP39(
+                                D.genDerivedMainKeyWithBIP39(
                                         "algorand zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice"
                                 )
                         }
@@ -81,8 +81,8 @@ class DeterministicP256Test {
 
                 @Test
                 fun keyPairGenerationTest() {
-                        val rootSeed =
-                                D.genRootSeedWithBIP39(
+                        val DerivedMainKey =
+                                D.genDerivedMainKeyWithBIP39(
                                         "salon zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice"
                                 )
 
@@ -90,11 +90,21 @@ class DeterministicP256Test {
                         val origin = "https://webauthn.guide"
                         val userId = "a2bd8bf7-2145-4a5a-910f-8fdc9ef421d3"
 
-                        val keyPair = D.genDomainSpecificKeypair(rootSeed, origin, userId)
+                        val keyPair = D.genDomainSpecificKeypair(DerivedMainKey, origin, userId)
                         val keyPair0 =
-                                D.genDomainSpecificKeypair(rootSeed, origin, userId, counter = 0)
+                                D.genDomainSpecificKeypair(
+                                        DerivedMainKey,
+                                        origin,
+                                        userId,
+                                        counter = 0
+                                )
                         val keyPair1 =
-                                D.genDomainSpecificKeypair(rootSeed, origin, userId, counter = 1)
+                                D.genDomainSpecificKeypair(
+                                        DerivedMainKey,
+                                        origin,
+                                        userId,
+                                        counter = 1
+                                )
 
                         // Check generated public key against hardcoded value
                         assertEquals(
@@ -122,7 +132,12 @@ class DeterministicP256Test {
                         // Additional check of the same key generation
                         assertEquals(
                                 keyPair1.public.toString(),
-                                D.genDomainSpecificKeypair(rootSeed, origin, userId, counter = 1)
+                                D.genDomainSpecificKeypair(
+                                                DerivedMainKey,
+                                                origin,
+                                                userId,
+                                                counter = 1
+                                        )
                                         .public
                                         .toString(),
                                 "Keys with the same counter value should be the same!"
