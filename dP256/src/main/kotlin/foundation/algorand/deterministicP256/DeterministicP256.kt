@@ -34,13 +34,13 @@ import javax.crypto.spec.PBEKeySpec
  * For generating passkeys intended for FIDO2-based authentication to web services, in a
  * deterministic manner that allows a user to regenerate the same keypair on different devices.
  *
- * 1) Start by generating a root seed from a BIP39 phrase using PBKDF2-HMAC-SHA512 with 600k
- * iterations. This should only be run once per device, and the root seed should be stored securely.
- * The mnemonic phrase should only be inputed once and then be discarded by the device.
+ * 1) Start by generating a derived main key from a BIP39 phrase using PBKDF2-HMAC-SHA512 with 600k
+ * iterations. This should only be run once per device, and the derived main key should be stored
+ * securely. The mnemonic phrase should only be inputed once and then be discarded by the device.
  *
- * 2) Generate a domain-specific keypair from the root seed, origin, and userId. The origin is the
- * domain of the service, and the userId is the user's unique identifier on that service. A counter
- * can also be set in case it is pertinent to generate multiple passkeys for a service.
+ * 2) Generate a domain-specific keypair from the derived main key, origin, and userId. The origin
+ * is the domain of the service, and the userId is the user's unique identifier on that service. A
+ * counter can also be set in case it is pertinent to generate multiple passkeys for a service.
  *
  * 3) Sign a payload with the domain-specific keypair. The keypairs can be stored and retreived from
  * storage using some secure storage mechanism.
@@ -60,7 +60,10 @@ class DeterministicP256 {
                 return genDerivedMainKey(phrase.toCharArray(), salt, iterationCount, keyLength)
         }
 
-        /** genDerivedMainKey - generates a root seed from a char array using PBKDF2-HMAC-SHA512. */
+        /**
+         * genDerivedMainKey - generates a derived main key from a char array using
+         * PBKDF2-HMAC-SHA512.
+         */
         private fun genDerivedMainKey(
                 entropy: CharArray,
                 salt: ByteArray,
@@ -73,8 +76,8 @@ class DeterministicP256 {
         }
 
         /**
-         * genDomainSpecificKeypair - generates a domain-specific keypair from a root seed, origin,
-         * userid and counter
+         * genDomainSpecificKeypair - generates a domain-specific keypair from a derived main key,
+         * origin, userid and counter
          */
         fun genDomainSpecificKeypair(
                 derivedMainKey: ByteArray,
