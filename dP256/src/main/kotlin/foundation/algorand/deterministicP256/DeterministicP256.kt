@@ -53,7 +53,7 @@ class DeterministicP256 {
         fun genDerivedMainKeyWithBIP39(
                 phrase: String,
                 salt: ByteArray = "liquid".toByteArray(),
-                iterationCount: Int = 600_000,
+                iterationCount: Int = 210_000,
                 keyLength: Int = 512
         ): ByteArray {
                 MnemonicCode(phrase).validate()

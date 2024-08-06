@@ -46,7 +46,7 @@ class DeterministicP256Test {
 
                         assertEquals(
                                 DerivedMainKey.contentToString(),
-                                "[-87, 35, 83, 123, -109, 61, 98, 116, -35, 56, -80, -101, 108, -51, 5, -62, 85, 56, -100, 40, -74, 57, 121, 85, -30, -16, 37, -32, 34, -102, -113, 28, 111, -3, -96, 88, -36, 119, -1, 18, 63, -85, 78, 83, -73, -68, -79, -69, 64, -120, -69, 58, -26, 94, -83, 119, -66, -88, -76, -8, -83, -67, 58, -6]"
+                                "[26, -46, -70, -105, 53, 65, -1, 61, 98, 59, 90, -126, -108, 59, 107, 10, -62, 93, -80, 122, 14, -86, 38, -17, -32, -42, -28, 123, -35, 66, 119, -42, 69, 38, 18, 110, 77, -24, -30, -30, -39, -103, 123, 0, -37, 119, 52, -38, 43, 42, 24, -31, 70, -68, 11, 77, -56, -57, -45, -115, 75, -92, 35, -30]"
                         )
 
                         // Test default parameters
@@ -55,13 +55,25 @@ class DeterministicP256Test {
                                         phrase =
                                                 "salon zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice",
                                         salt = "liquid".toByteArray(),
-                                        iterationCount = 600_000,
+                                        iterationCount = 210_000,
                                         keyLength = 512
                                 )
 
                         assertEquals(
                                 DerivedMainKey.contentToString(),
                                 DerivedMainKeyFixedParams.contentToString()
+                        )
+
+                        // Test with non-default parameters
+                        val DerivedMainKeyNonDef =
+                                D.genDerivedMainKeyWithBIP39(
+                                        "salon zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice",
+                                        iterationCount = 600_000
+                                )
+
+                        assertEquals(
+                                DerivedMainKeyNonDef.contentToString(),
+                                "[-87, 35, 83, 123, -109, 61, 98, 116, -35, 56, -80, -101, 108, -51, 5, -62, 85, 56, -100, 40, -74, 57, 121, 85, -30, -16, 37, -32, 34, -102, -113, 28, 111, -3, -96, 88, -36, 119, -1, 18, 63, -85, 78, 83, -73, -68, -79, -69, 64, -120, -69, 58, -26, 94, -83, 119, -66, -88, -76, -8, -83, -67, 58, -6]"
                         )
                 }
 
@@ -109,7 +121,7 @@ class DeterministicP256Test {
                         // Check generated public key against hardcoded value
                         assertEquals(
                                 keyPair.public.encoded.contentToString(),
-                                "[48, 89, 48, 19, 6, 7, 42, -122, 72, -50, 61, 2, 1, 6, 8, 42, -122, 72, -50, 61, 3, 1, 7, 3, 66, 0, 4, -50, -16, 75, 50, -59, 86, 33, 17, -106, 99, 39, -71, -44, 13, 21, -111, 69, -93, 45, 57, 53, 96, -76, -57, 1, -93, 39, 101, -106, -59, -34, 98, -47, -47, -65, 104, 60, 70, -47, 46, 112, 24, -79, 76, -13, 57, 42, -4, -8, -55, 109, -13, -74, -39, 38, 5, 36, 47, -82, 18, -116, -30, -44, 43]",
+                                "[48, 89, 48, 19, 6, 7, 42, -122, 72, -50, 61, 2, 1, 6, 8, 42, -122, 72, -50, 61, 3, 1, 7, 3, 66, 0, 4, -51, -127, -4, -41, 35, 55, -122, -27, -104, 70, 74, -26, 65, 1, -45, -8, -22, 121, 109, -30, -70, 23, 113, -51, -9, 52, -77, 76, -102, -14, -80, 64, 89, -121, 14, -65, 0, 119, -104, 55, 22, 96, -13, -80, -23, -123, 41, 61, 91, -11, 47, 87, -49, -36, -10, 16, -112, -17, 96, 78, 102, -25, 71, 45]",
                                 "Public key should match hardcoded value!"
                         )
 
