@@ -34,7 +34,7 @@ import javax.crypto.spec.PBEKeySpec
  * For generating passkeys intended for FIDO2-based authentication to web services, in a
  * deterministic manner that allows a user to regenerate the same keypair on different devices.
  *
- * 1) Start by generating a derived main key from a BIP39 phrase using PBKDF2-HMAC-SHA512 with 600k
+ * 1) Start by generating a derived main key from a BIP39 phrase using PBKDF2-HMAC-SHA512 with 210k
  * iterations. This should only be run once per device, and the derived main key should be stored
  * securely. The mnemonic phrase should only be inputed once and then be discarded by the device.
  *

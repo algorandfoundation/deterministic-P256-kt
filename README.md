@@ -76,7 +76,7 @@ val derivedMainKey = DP256.genDerivedMainKeyWithBIP39("salon zoo engage submit s
 
 The function `genDerivedMainKeyWithBIP39(.)` validates the mnemonic, that the words are 1) valid according to the [wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md). 2) that the checksum (final word) is correct.
 
-It wraps around the private function `genDerivedMainKey` which in turn calls PBKDF2-HMAC-SHA512. By default, the salt is `liquid`(in bytes), iterator count is 600000 and key length 512 (64 bytes).
+It wraps around the private function `genDerivedMainKey` which in turn calls PBKDF2-HMAC-SHA512. By default, the salt is `liquid`(in bytes), iterator count is 210_00 and key length 512 (64 bytes).
 
 A `derivedMainKey`is returned from this function. In the context of generating P-256 passkeys, the mnemonic should be safely stored off-device and never stored on it; a user can supply it if needed (e.g., if the device's storage gets wiped). It is enough to store the derivedMainKey.
 
