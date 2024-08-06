@@ -1,6 +1,6 @@
 # DeterministicP256 - Deterministically generate P-256 (Secp256r1) credentials
 
-A small library created for [Liquid Auth Android](https://github.com/algorandfoundation/liquid-auth-android) allowing users to specify a BIP39-compliant mnemonic, ran through a PBKDF2, to produce a root seed that can then be used to generate other passkeys for FIDO2-based web authentication.
+A small library created for [Liquid Auth Android](https://github.com/algorandfoundation/liquid-auth-android) allowing users to specify a BIP39-compliant mnemonic, ran through a PBKDF2, to produce a derived main key that can then be used to generate other passkeys for FIDO2-based web authentication.
 
 This allows a user to regenerate passkeys created for specific domains (e.g., GitHub.com) and userIds anew, across platforms and devices. The alternative is to either keep the passkeys device-bound, or to rely on Google or Apple to custody the keys on-behalf of the user.
 
@@ -18,13 +18,13 @@ The first step is to acquire a BIP39 valid mnemonic phrase. The entropy behind i
 
 This is not handled by this library.
 
-2. Transforming the BIP39 mnemonic into a P-256 root seed
+2. Transforming the BIP39 mnemonic into a P-256 derived main key
 
 The BIP39 mnemonic serves as a "passphrase" for our PBKDF2-SHA-512 key derivation function. The function also takes a "salt", an iteration count and a key length.
 
 - To ensure determinism, and to avoid the user having to manually keep track of additional secrets per origin service, an application-wide "pepper" value can be passed instead. By default, that pepper is "liquid".
 
-- Iteration count () is set at 600 000 by default.
+- Iteration count () is set at 210 000 by default.
 
 - Key length is set at 512 by default.
 
@@ -32,13 +32,13 @@ Note: setting the "salt" value to "mnemonic" and iteration count to 2048 will re
 
 We are purposefully creating a barrier. An app consuming this library only needs to store the P-256 seed, it does not need to store the mnemonic as well - though it might choose to do so to ensure the user has a way to write down their mnemonic again if they lost their "paper backup".
 
-The point is that while the mnemonic chould be inputted - and thus be loaded into memory - only once in the lifetime of the device (or until it gets wiped), the P-256 root seed needs to be loaded into memory from secure storage any time the user needs to generate a new passkey keypair for a new website.
+The point is that while the mnemonic chould be inputted - and thus be loaded into memory - only once in the lifetime of the device (or until it gets wiped), the P-256 derived main key needs to be loaded into memory from secure storage any time the user needs to generate a new passkey keypair for a new website.
 
-The P-256 root secret is used to generate keypairs, which are unique per origin service and userId and which are loaded into memory every time the user needs to sign with them (sign into a website).
+The P-256 derived main key secret is used to generate keypairs, which are unique per origin service and userId and which are loaded into memory every time the user needs to sign with them (sign into a website).
 
-3.  Generating a Passkey (P-256 keypair) from the P-256 root seed
+3.  Generating a Passkey (P-256 keypair) from the P-256 derived main key
 
-To generate a new keypair for a website, the P-256 root seed is concatenated alongside the origin domain identifier (e.g., the URL) and the userId assigned by the website to the user. A counter can also optionally be specified - if not, by default, it is set as 0.
+To generate a new keypair for a website, the P-256 derived main key is concatenated alongside the origin domain identifier (e.g., the URL) and the userId assigned by the website to the user. A counter can also optionally be specified - if not, by default, it is set as 0.
 
 Picking the URL is useful as it prevents phishing attacks - a slight deviation in the URL results in a totally different keypair. But it also means that a change of the URL (e.g. Twitter -> X) results in having to generate new keypairs.
 
@@ -53,9 +53,9 @@ graph TD;
     A[PRNG] -->|Generate Entropy| B(BIP39-compliant Mnemonic)
     B --> C[PBKDF2-SHA-512]
     D(pepper = 'liquid') --> C
-    E(iterCount = 600k) --> C
+    E(iterCount = 210k) --> C
     F(keyLength = 512) --> C
-    C --> |...| G(Passkey Root Seed)
+    C --> |...| G(Passkey Derived Main Key Seed)
     G --> H[+]
     I(origin) --> H
     J(userId) --> H
@@ -69,16 +69,16 @@ graph TD;
 
 val DP256 = DeterministicP256()
 
-// Generate the root seed by passing along a BIP39 mnemonic:
+// Generate the derived main key by passing along a BIP39 mnemonic:
 
-val rootSeed = DP256.genRootSeedWithBIP39("salon zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice")
+val derivedMainKey = DP256.genDerivedMainKeyWithBIP39("salon zoo engage submit smile frost later decide wing sight chaos renew lizard rely canal coral scene hobby scare step bus leaf tobacco slice")
 ```
 
-The function `genRootSeedWithBIP39(.)` validates the mnemonic, that the words are 1) valid according to the [wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md). 2) that the checksum (final word) is correct.
+The function `genDerivedMainKeyWithBIP39(.)` validates the mnemonic, that the words are 1) valid according to the [wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md). 2) that the checksum (final word) is correct.
 
-It wraps around the private function `genRootSeed` which in turn calls PBKDF2-HMAC-SHA512. By default, the salt is `liquid`(in bytes), iterator count is 600000 and key length 512 (64 bytes).
+It wraps around the private function `genDerivedMainKey` which in turn calls PBKDF2-HMAC-SHA512. By default, the salt is `liquid`(in bytes), iterator count is 600000 and key length 512 (64 bytes).
 
-A `rootSeed`is returned from this function. In the context of generating P-256 passkeys, the mnemonic should be safely stored off-device and never stored on it; a user can supply it if needed (e.g., if the device's storage gets wiped). It is enough to store the rootSeed.
+A `derivedMainKey`is returned from this function. In the context of generating P-256 passkeys, the mnemonic should be safely stored off-device and never stored on it; a user can supply it if needed (e.g., if the device's storage gets wiped). It is enough to store the derivedMainKey.
 
 A domain (website) and user-specific P-256 keyPair can now be generate, for use in a FIDO2-compliant passkey sign-in flow.
 
@@ -87,12 +87,12 @@ A domain (website) and user-specific P-256 keyPair can now be generate, for use 
 val origin = "https://webauthn.guide"
 val userId = "a2bd8bf7-2145-4a5a-910f-8fdc9ef421d3"
 
-val keyPair = DP256.genDomainSpecificKeypair(rootSeed, origin, userId)
+val keyPair = DP256.genDomainSpecificKeypair(derivedMainKey, origin, userId)
 ```
 
 Optionally, `genDomainSpecificKeypair()` also takes a counter Int value (by default it is counter = 0). This allows for multiple passkeys to be generated for a specific domain and userId, by incrementing the counter.
 
-Under the hood, the seed for the keyPair is generated by computing `SHA512(rootSeed || origin || userId)` where || refers to a concatenation of the bytes.
+Under the hood, the seed for the keyPair is generated by computing `SHA512(derivedMainKey || origin || userId)` where || refers to a concatenation of the bytes.
 
 # Setup
 
