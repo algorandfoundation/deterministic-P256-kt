@@ -135,6 +135,10 @@ class DeterministicP256 {
                 return sig.sign()
         }
 
+        /**
+         * convertBouncyCastleKeyPairToJavaKeyPair - converts BC-style keypair to
+         * Java.Security-style keypair
+         */
         fun convertBouncyCastleKeyPairToJavaKeyPair(bcKeyPair: AsymmetricCipherKeyPair): KeyPair {
                 val ecSpec = ECNamedCurveTable.getParameterSpec("secp256r1")
                 val curveSpec =
