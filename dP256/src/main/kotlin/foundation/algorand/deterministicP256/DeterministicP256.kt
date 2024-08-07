@@ -20,12 +20,14 @@ import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.MessageDigest
 import java.security.SecureRandom
+import java.security.Security
 import java.security.Signature
-import java.security.interfaces.ECPrivateKey
-import java.security.spec.ECGenParameterSpec
 import java.security.spec.KeySpec
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
+import org.bouncycastle.jce.interfaces.ECPrivateKey
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.bouncycastle.jce.spec.ECNamedCurveGenParameterSpec
 
 /**
  * DeterministicP256 - a class that generates deterministic P-256 keypairs from a BIP39 phrase and a
@@ -46,6 +48,12 @@ import javax.crypto.spec.PBEKeySpec
  * storage using some secure storage mechanism.
  */
 class DeterministicP256 {
+
+        // Add Bouncy Castle as a security provider
+        init {
+                Security.addProvider(BouncyCastleProvider())
+        }
+
         /**
          * genDerivedMainKeyWithBIP39 - wrapper around genDerivedMainKey that validates the BIP39
          * phrase.
@@ -93,9 +101,11 @@ class DeterministicP256 {
                                 ByteBuffer.allocate(4).putInt(counter).array()
                 val seed = digest.digest(concat)
 
-                val generator: KeyPairGenerator = KeyPairGenerator.getInstance("EC")
-
-                generator.initialize(ECGenParameterSpec("secp256r1"), FixedSecureRandom(seed))
+                val generator: KeyPairGenerator = KeyPairGenerator.getInstance("EC", "BC")
+                generator.initialize(
+                        ECNamedCurveGenParameterSpec("secp256r1"),
+                        FixedSecureRandom(seed)
+                )
                 return generator.generateKeyPair()
         }
 
