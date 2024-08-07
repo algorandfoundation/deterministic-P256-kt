@@ -110,6 +110,7 @@ class DeterministicP256Test {
                                         userId,
                                         counter = 0
                                 )
+
                         val keyPair1 =
                                 D.genDomainSpecificKeypair(
                                         DerivedMainKey,
@@ -129,21 +130,21 @@ class DeterministicP256Test {
                         // deterministically
                         // twice in a row
                         assertEquals(
-                                keyPair.public.toString(),
-                                keyPair0.public.toString(),
+                                keyPair.public.encoded.contentToString(),
+                                keyPair0.public.encoded.contentToString(),
                                 "Keys with the same counter value should be the same!"
                         )
 
                         // Check that different counter values produce different keys
                         assertNotEquals(
-                                keyPair.public.toString(),
-                                keyPair1.public.toString(),
+                                keyPair.public.encoded.contentToString(),
+                                keyPair1.public.encoded.contentToString(),
                                 "Keys with different counter values should be different!"
                         )
 
                         // Additional check of the same key generation
                         assertEquals(
-                                keyPair1.public.toString(),
+                                keyPair1.public.encoded.contentToString(),
                                 D.genDomainSpecificKeypair(
                                                 DerivedMainKey,
                                                 origin,
@@ -151,7 +152,8 @@ class DeterministicP256Test {
                                                 counter = 1
                                         )
                                         .public
-                                        .toString(),
+                                        .encoded
+                                        .contentToString(),
                                 "Keys with the same counter value should be the same!"
                         )
 

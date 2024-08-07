@@ -16,18 +16,30 @@ package foundation.algorand.deterministicP256
 
 import cash.z.ecc.android.bip39.Mnemonics.MnemonicCode
 import java.nio.ByteBuffer
+import java.security.KeyFactory
 import java.security.KeyPair
-import java.security.KeyPairGenerator
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.security.Security
 import java.security.Signature
+import java.security.interfaces.ECPrivateKey
+import java.security.interfaces.ECPublicKey
+import java.security.spec.ECPrivateKeySpec
+import java.security.spec.ECPublicKeySpec
 import java.security.spec.KeySpec
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
-import org.bouncycastle.jce.interfaces.ECPrivateKey
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair
+import org.bouncycastle.crypto.generators.ECKeyPairGenerator
+import org.bouncycastle.crypto.params.ECDomainParameters
+import org.bouncycastle.crypto.params.ECKeyGenerationParameters
+import org.bouncycastle.crypto.params.ECPrivateKeyParameters
+import org.bouncycastle.crypto.params.ECPublicKeyParameters
+import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.jce.spec.ECNamedCurveGenParameterSpec
+import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
+import org.bouncycastle.jce.spec.ECNamedCurveSpec
+import org.bouncycastle.math.ec.custom.sec.SecP256R1Curve
 
 /**
  * DeterministicP256 - a class that generates deterministic P-256 keypairs from a BIP39 phrase and a
@@ -101,20 +113,60 @@ class DeterministicP256 {
                                 ByteBuffer.allocate(4).putInt(counter).array()
                 val seed = digest.digest(concat)
 
-                val generator: KeyPairGenerator = KeyPairGenerator.getInstance("EC", "BC")
-                generator.initialize(
-                        ECNamedCurveGenParameterSpec("secp256r1"),
-                        FixedSecureRandom(seed)
-                )
-                return generator.generateKeyPair()
+                val curve = SecP256R1Curve()
+                val parameterSpec: ECNamedCurveParameterSpec =
+                        ECNamedCurveTable.getParameterSpec("secp256r1")
+
+                val domainParams =
+                        ECDomainParameters(curve, parameterSpec.g, parameterSpec.n, parameterSpec.h)
+                val keyGenParams = ECKeyGenerationParameters(domainParams, FixedSecureRandom(seed))
+                val keyPairGenerator = ECKeyPairGenerator()
+                keyPairGenerator.init(keyGenParams)
+
+                return convertBouncyCastleKeyPairToJavaKeyPair(keyPairGenerator.generateKeyPair())
         }
 
         /** signWithDomainSpecificKeyPair - signs a payload with a domain-specific keypair */
         fun signWithDomainSpecificKeyPair(keyPair: KeyPair, payload: ByteArray): ByteArray {
-                val sig = Signature.getInstance("SHA256withECDSA")
-                sig.initSign(keyPair.private as ECPrivateKey)
+                val sig = Signature.getInstance("SHA256withECDSA", "BC")
+                val privateKey = keyPair.private as ECPrivateKey
+                sig.initSign(privateKey)
                 sig.update(payload)
                 return sig.sign()
+        }
+
+        fun convertBouncyCastleKeyPairToJavaKeyPair(bcKeyPair: AsymmetricCipherKeyPair): KeyPair {
+                val ecSpec = ECNamedCurveTable.getParameterSpec("secp256r1")
+                val curveSpec =
+                        ECNamedCurveSpec(
+                                ecSpec.name,
+                                ecSpec.curve,
+                                ecSpec.g,
+                                ecSpec.n,
+                                ecSpec.h,
+                                ecSpec.seed
+                        )
+
+                // Extract the private key
+                val bcPrivateKey = bcKeyPair.private as ECPrivateKeyParameters
+                val privateKeySpec = ECPrivateKeySpec(bcPrivateKey.d, curveSpec)
+                val keyFactory = KeyFactory.getInstance("EC")
+                val privateKey = keyFactory.generatePrivate(privateKeySpec) as ECPrivateKey
+
+                // Extract the public key
+                val bcPublicKey = bcKeyPair.public as ECPublicKeyParameters
+                val q = bcPublicKey.q
+                val publicKeySpec =
+                        ECPublicKeySpec(
+                                java.security.spec.ECPoint(
+                                        q.affineXCoord.toBigInteger(),
+                                        q.affineYCoord.toBigInteger()
+                                ),
+                                curveSpec
+                        )
+                val publicKey = keyFactory.generatePublic(publicKeySpec) as ECPublicKey
+
+                return KeyPair(publicKey, privateKey)
         }
 }
 
