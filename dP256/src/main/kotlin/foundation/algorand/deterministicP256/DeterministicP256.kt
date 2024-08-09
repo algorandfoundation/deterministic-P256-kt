@@ -41,6 +41,8 @@ import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
 import org.bouncycastle.jce.spec.ECNamedCurveSpec
 import org.bouncycastle.math.ec.custom.sec.SecP256R1Curve
 
+val ECDSA_POINT_SIZE = 64
+
 /**
  * DeterministicP256 - a class that generates deterministic P-256 keypairs from a BIP39 phrase and a
  * domain-specific origin and userId.
@@ -171,6 +173,16 @@ class DeterministicP256 {
                 val publicKey = keyFactory.generatePublic(publicKeySpec) as ECPublicKey
 
                 return KeyPair(publicKey, privateKey)
+        }
+
+        /**
+         * getPurePKBytes - get the bytes that represent the public key without any metadata
+         * specific to any Kotlin implementation. Useful for deterministically creating FIDO2
+         * Credential IDs across languages.
+         */
+        fun getPurePKBytes(keyPair: KeyPair): ByteArray {
+                val fullLength = keyPair.public.encoded.size
+                return keyPair.public.encoded.copyOfRange(fullLength - ECDSA_POINT_SIZE, fullLength)
         }
 }
 
