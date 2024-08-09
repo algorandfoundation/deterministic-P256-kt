@@ -142,8 +142,7 @@ class DeterministicP256Test {
                         )
 
                         // Check default counter value and that the same key is generated
-                        // deterministically
-                        // twice in a row
+                        // deterministically twice in a row
                         assertEquals(
                                 keyPair.public.encoded.contentToString(),
                                 keyPair0.public.encoded.contentToString(),
@@ -190,6 +189,7 @@ class DeterministicP256Test {
 
                         // Check that the signature is valid
                         val sig = Signature.getInstance("SHA256withECDSA")
+
                         sig.initVerify(keyPair.public as ECPublicKey)
                         sig.update(message)
                         assertTrue(sig.verify(signature), "Signature should be valid!")
