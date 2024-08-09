@@ -182,7 +182,8 @@ class DeterministicP256Test {
                         assertTrue(sig.verify(signature), "Signature should be valid!")
 
                         // Note that ECDSA signatures are non-deterministic (see ECDSA nonce-reuse
-                        // attack) so we cannot hardcoe and compared outptus across rounds of tests.
+                        // attack) so we cannot hardcoe and compared outputs across rounds of tests
+                        // the same way we could with Ed25519.
 
                         // Check that a false signature is invalid
                         val sigFalse = Signature.getInstance("SHA256withECDSA")
@@ -192,7 +193,99 @@ class DeterministicP256Test {
 
                         // Check that the signature produced from the Swift version with the same
                         // keypair can be verified with java.security and is valid
-                        val signatureSwift =
+
+                        /**
+                         * The following is a Distinguished Encoding Rules (DER) representation of a
+                         * P256 signature, produced with Apple's CryptoKit P256 in the Swift
+                         * implementation
+                         * https://developer.apple.com/documentation/cryptokit/p256/signing/ecdsasignature/derrepresentation
+                         */
+                        val signatureSwiftDER =
+                                listOf(
+                                                48,
+                                                69,
+                                                2,
+                                                32,
+                                                127,
+                                                107,
+                                                109,
+                                                225,
+                                                190,
+                                                214,
+                                                81,
+                                                65,
+                                                58,
+                                                180,
+                                                206,
+                                                218,
+                                                92,
+                                                175,
+                                                171,
+                                                252,
+                                                192,
+                                                157,
+                                                115,
+                                                144,
+                                                38,
+                                                137,
+                                                129,
+                                                204,
+                                                209,
+                                                101,
+                                                83,
+                                                36,
+                                                51,
+                                                234,
+                                                99,
+                                                159,
+                                                2,
+                                                33,
+                                                0,
+                                                187,
+                                                26,
+                                                253,
+                                                183,
+                                                121,
+                                                69,
+                                                71,
+                                                251,
+                                                2,
+                                                86,
+                                                59,
+                                                114,
+                                                37,
+                                                194,
+                                                137,
+                                                222,
+                                                246,
+                                                245,
+                                                204,
+                                                13,
+                                                60,
+                                                172,
+                                                232,
+                                                54,
+                                                189,
+                                                179,
+                                                126,
+                                                142,
+                                                42,
+                                                7,
+                                                115,
+                                                166
+                                        )
+                                        .map { it.toByte() }
+                                        .toByteArray()
+
+                        val sigSwiftDER = Signature.getInstance("SHA256withECDSA")
+                        sigSwiftDER.initVerify(keyPair.public as ECPublicKey)
+                        sigSwiftDER.update(message)
+                        assertTrue(
+                                sigSwiftDER.verify(signatureSwiftDER),
+                                "Swift Signature should be valid!"
+                        )
+
+                        val signatureSwiftRaw =
                                 listOf(
                                                 119,
                                                 124,
@@ -263,31 +356,31 @@ class DeterministicP256Test {
                                         .toByteArray()
 
                         /**
-                         * The Swift library (Apple CryptoKit P256 P256.Signing
-                         * P256.Signing.PrivateKey) produces only the 32 bytes of r and s.
+                         * The following is a signature by Swift library (Apple CryptoKit P256
+                         * P256.Signing P256.Signing.PrivateKey) in the raw representation format,
+                         * containing only the 32 bytes of r and s.
                          *
-                         * The java.security library on the other hand includes more metadata and
-                         * encodes the curve order n alongside BigInteger versions of r and s.
-                         *
-                         * Hence we need to encode the Swift library's output before it can be
-                         * verified with java.security (and using BC as the provider).
+                         * We encode it into DER format before verifying it with java.security
                          *
                          * https://github.com/bcgit/bc-java/blob/581c10c7774289433d214bb6ae1ad9ca0618d4f0/core/src/main/java/org/bouncycastle/crypto/signers/StandardDSAEncoding.java#L19
                          * https://github.com/bcgit/bc-java/blob/581c10c7774289433d214bb6ae1ad9ca0618d4f0/prov/src/main/java/org/bouncycastle/jcajce/provider/asymmetric/dsa/DSASigner.java#L104
                          * https://github.com/bcgit/bc-java/blob/581c10c7774289433d214bb6ae1ad9ca0618d4f0/core/src/main/java/org/bouncycastle/crypto/signers/ECDSASigner.java#L95
+                         *
+                         * It is included here as an extra check of interoperability and for future
+                         * reference.
                          */
-                        val encodedSignatureSwift =
+                        val encodedSignatureSwiftRaw =
                                 StandardDSAEncoding.INSTANCE.encode(
                                         ECNamedCurveTable.getParameterSpec("secp256r1").n,
-                                        BigInteger(1, signatureSwift.copyOfRange(0, 32)),
-                                        BigInteger(1, signatureSwift.copyOfRange(32, 64))
+                                        BigInteger(1, signatureSwiftRaw.copyOfRange(0, 32)),
+                                        BigInteger(1, signatureSwiftRaw.copyOfRange(32, 64))
                                 )
 
-                        val sigSwift = Signature.getInstance("SHA256withECDSA")
-                        sigSwift.initVerify(keyPair.public as ECPublicKey)
-                        sigSwift.update(message)
+                        val sigSwiftRaw = Signature.getInstance("SHA256withECDSA")
+                        sigSwiftRaw.initVerify(keyPair.public as ECPublicKey)
+                        sigSwiftRaw.update(message)
                         assertTrue(
-                                sigSwift.verify(encodedSignatureSwift),
+                                sigSwiftRaw.verify(encodedSignatureSwiftRaw),
                                 "Swift Signature should be valid!"
                         )
                 }
