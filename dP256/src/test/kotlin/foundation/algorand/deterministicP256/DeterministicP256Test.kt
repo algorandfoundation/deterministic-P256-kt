@@ -344,4 +344,3 @@ class DeterministicP256Test {
                 }
         }
 }
-}
