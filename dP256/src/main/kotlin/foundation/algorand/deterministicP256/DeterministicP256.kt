@@ -180,9 +180,13 @@ class DeterministicP256 {
          * specific to any Kotlin implementation. Useful for deterministically creating FIDO2
          * Credential IDs across languages.
          */
-        fun getPurePKBytes(keyPair: KeyPair): ByteArray {
+        @OptIn(kotlin.ExperimentalUnsignedTypes::class)
+        fun getPurePKBytes(keyPair: KeyPair): UByteArray {
                 val fullLength = keyPair.public.encoded.size
-                return keyPair.public.encoded.copyOfRange(fullLength - ECDSA_POINT_SIZE, fullLength)
+                return keyPair.public
+                        .encoded
+                        .copyOfRange(fullLength - ECDSA_POINT_SIZE, fullLength)
+                        .toUByteArray()
         }
 }
 

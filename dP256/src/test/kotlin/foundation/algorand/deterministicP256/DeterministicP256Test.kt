@@ -131,14 +131,80 @@ class DeterministicP256Test {
                         )
 
                         // Check that the expected "Pure" Public Key Bytes are produced, without any
-                        // metadata. This should be the same across all language implementations
-                        assertEquals(
-                                D.getPurePKBytes(keyPair).joinToString(", ") {
-                                        it.toUByte().toString()
-                                        // Force Kotlin's standard signed byte to unsigned
-                                },
-                                "55, 133, 168, 32, 86, 59, 61, 35, 82, 221, 57, 185, 59, 244, 100, 95, 233, 134, 87, 60, 213, 197, 188, 118, 182, 82, 171, 97, 186, 196, 228, 183, 222, 170, 59, 65, 219, 148, 165, 120, 41, 161, 169, 255, 220, 188, 184, 178, 144, 95, 134, 97, 105, 144, 174, 152, 235, 19, 98, 207, 114, 59, 129, 76",
-                                "Public key should match hardcoded value!"
+                        // extra metadata or other encoding. The output of this method should be
+                        // unambiguously the same across all language implementations
+                        @OptIn(kotlin.ExperimentalUnsignedTypes::class)
+                        assertTrue(
+                                D.getPurePKBytes(keyPair)
+                                        .contentEquals(
+                                                ubyteArrayOf(
+                                                        55u,
+                                                        133u,
+                                                        168u,
+                                                        32u,
+                                                        86u,
+                                                        59u,
+                                                        61u,
+                                                        35u,
+                                                        82u,
+                                                        221u,
+                                                        57u,
+                                                        185u,
+                                                        59u,
+                                                        244u,
+                                                        100u,
+                                                        95u,
+                                                        233u,
+                                                        134u,
+                                                        87u,
+                                                        60u,
+                                                        213u,
+                                                        197u,
+                                                        188u,
+                                                        118u,
+                                                        182u,
+                                                        82u,
+                                                        171u,
+                                                        97u,
+                                                        186u,
+                                                        196u,
+                                                        228u,
+                                                        183u,
+                                                        222u,
+                                                        170u,
+                                                        59u,
+                                                        65u,
+                                                        219u,
+                                                        148u,
+                                                        165u,
+                                                        120u,
+                                                        41u,
+                                                        161u,
+                                                        169u,
+                                                        255u,
+                                                        220u,
+                                                        188u,
+                                                        184u,
+                                                        178u,
+                                                        144u,
+                                                        95u,
+                                                        134u,
+                                                        97u,
+                                                        105u,
+                                                        144u,
+                                                        174u,
+                                                        152u,
+                                                        235u,
+                                                        19u,
+                                                        98u,
+                                                        207u,
+                                                        114u,
+                                                        59u,
+                                                        129u,
+                                                        76u
+                                                )
+                                        ),
+                                "getPurePKBytes should match hardcoded value!"
                         )
 
                         // Check default counter value and that the same key is generated
