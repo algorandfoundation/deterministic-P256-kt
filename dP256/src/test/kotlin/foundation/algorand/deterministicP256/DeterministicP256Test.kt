@@ -271,6 +271,10 @@ class DeterministicP256Test {
                          *
                          * Hence we need to encode the Swift library's output before it can be
                          * verified with java.security (and using BC as the provider).
+                         *
+                         * https://github.com/bcgit/bc-java/blob/581c10c7774289433d214bb6ae1ad9ca0618d4f0/core/src/main/java/org/bouncycastle/crypto/signers/StandardDSAEncoding.java#L19
+                         * https://github.com/bcgit/bc-java/blob/581c10c7774289433d214bb6ae1ad9ca0618d4f0/prov/src/main/java/org/bouncycastle/jcajce/provider/asymmetric/dsa/DSASigner.java#L104
+                         * https://github.com/bcgit/bc-java/blob/581c10c7774289433d214bb6ae1ad9ca0618d4f0/core/src/main/java/org/bouncycastle/crypto/signers/ECDSASigner.java#L95
                          */
                         val encodedSignatureSwift =
                                 StandardDSAEncoding.INSTANCE.encode(
@@ -339,4 +343,5 @@ class DeterministicP256Test {
                         ) // 0 because fixedValue is exhausted
                 }
         }
+}
 }
