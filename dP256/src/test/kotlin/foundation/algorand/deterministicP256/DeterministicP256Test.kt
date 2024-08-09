@@ -175,6 +175,19 @@ class DeterministicP256Test {
                         val message = "Hello, World!".toByteArray()
                         val signature = D.signWithDomainSpecificKeyPair(keyPair, message)
 
+                        /**
+                         * For future reference, use the following to decode the signature into (r,
+                         * s) as BigIntegers which can in turn be turned into ByteArrays (e.g. to
+                         * check interoperability):
+                         *
+                         * import org.bouncycastle.crypto.signers.StandardDSAEncoding
+                         *
+                         * import org.bouncycastle.jce.ECNamedCurveTable
+                         *
+                         * val rawSignature =
+                         * StandardDSAEncoding.INSTANCE.decode(ECNamedCurveTable.getParameterSpec("secp256r1").n,signature)
+                         */
+
                         // Check that the signature is valid
                         val sig = Signature.getInstance("SHA256withECDSA")
                         sig.initVerify(keyPair.public as ECPublicKey)
