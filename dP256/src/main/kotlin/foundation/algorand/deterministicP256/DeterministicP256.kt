@@ -45,7 +45,7 @@ val ECDSA_POINT_SIZE = 64
 
 /**
  * DeterministicP256 - a class that generates deterministic P-256 keypairs from a BIP39 phrase and a
- * domain-specific origin and userId.
+ * domain-specific origin and userHandle.
  *
  * For generating passkeys intended for FIDO2-based authentication to web services, in a
  * deterministic manner that allows a user to regenerate the same keypair on different devices.
@@ -54,9 +54,10 @@ val ECDSA_POINT_SIZE = 64
  * iterations. This should only be run once per device, and the derived main key should be stored
  * securely. The mnemonic phrase should only be inputed once and then be discarded by the device.
  *
- * 2) Generate a domain-specific keypair from the derived main key, origin, and userId. The origin
- * is the domain of the service, and the userId is the user's unique identifier on that service. A
- * counter can also be set in case it is pertinent to generate multiple passkeys for a service.
+ * 2) Generate a domain-specific keypair from the derived main key, origin, and userHandle. The
+ * origin is the domain of the service, and the userHandle is the user's unique identifier on that
+ * service. A counter can also be set in case it is pertinent to generate multiple passkeys for a
+ * service.
  *
  * 3) Sign a payload with the domain-specific keypair. The keypairs can be stored and retreived from
  * storage using some secure storage mechanism.
@@ -99,19 +100,19 @@ class DeterministicP256 {
 
         /**
          * genDomainSpecificKeypair - generates a domain-specific keypair from a derived main key,
-         * origin, userid and counter
+         * origin, userHandle and counter
          */
         fun genDomainSpecificKeypair(
                 derivedMainKey: ByteArray,
                 origin: String,
-                userId: String,
+                userHandle: String,
                 counter: Int = 0
         ): KeyPair {
                 val digest = MessageDigest.getInstance("SHA-512")
                 val concat =
                         derivedMainKey +
                                 origin.toByteArray() +
-                                userId.toByteArray() +
+                                userHandle.toByteArray() +
                                 ByteBuffer.allocate(4).putInt(counter).array()
                 val seed = digest.digest(concat)
 
@@ -203,7 +204,8 @@ class DeterministicP256 {
  * our case: 1) we need it to be deterministic, across platforms 2) we are assuming that the
  * underlying BIP39 phrase was generated securely randomly for the derivedMainKey 3) we are relying
  * on a PBKDF2-HMAC-SHA512 to further harden that derivedMainKey even more and create separation, 4)
- * each keyPair's seed is a hashed concatenatino of the derivedMainKey, origin, userId, and counter.
+ * each keyPair's seed is a hashed concatenatino of the derivedMainKey, origin, userHandle, and
+ * counter.
  *
  * The assumption is that the combination of 2 & 3 & 4 creates enough random entropy to make it safe
  * to generate P-256 keypairs in this way.

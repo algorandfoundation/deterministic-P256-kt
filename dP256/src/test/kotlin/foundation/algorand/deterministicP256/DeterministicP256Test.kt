@@ -105,15 +105,15 @@ class DeterministicP256Test {
 
                         // Example values taken from: https://webauthn.guide/#registration
                         val origin = "https://webauthn.guide"
-                        val userId = "a2bd8bf7-2145-4a5a-910f-8fdc9ef421d3"
+                        val userHandle = "a2bd8bf7-2145-4a5a-910f-8fdc9ef421d3"
 
-                        val keyPair = D.genDomainSpecificKeypair(DerivedMainKey, origin, userId)
+                        val keyPair = D.genDomainSpecificKeypair(DerivedMainKey, origin, userHandle)
 
                         val keyPair0 =
                                 D.genDomainSpecificKeypair(
                                         DerivedMainKey,
                                         origin,
-                                        userId,
+                                        userHandle,
                                         counter = 0
                                 )
 
@@ -121,7 +121,7 @@ class DeterministicP256Test {
                                 D.genDomainSpecificKeypair(
                                         DerivedMainKey,
                                         origin,
-                                        userId,
+                                        userHandle,
                                         counter = 1
                                 )
 
@@ -279,7 +279,7 @@ class DeterministicP256Test {
                                 D.genDomainSpecificKeypair(
                                                 DerivedMainKey,
                                                 origin,
-                                                userId,
+                                                userHandle,
                                                 counter = 1
                                         )
                                         .public
