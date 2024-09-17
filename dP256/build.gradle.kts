@@ -10,6 +10,9 @@ dependencies {
     // BIP 39
     implementation("cash.z.ecc.android:kotlin-bip39:1.0.8")
 
+    // Bouncy Castle
+    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+
     // Use the Kotlin JUnit 5 integration.
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 

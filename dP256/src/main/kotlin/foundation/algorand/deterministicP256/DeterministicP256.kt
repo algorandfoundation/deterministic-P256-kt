@@ -16,20 +16,36 @@ package foundation.algorand.deterministicP256
 
 import cash.z.ecc.android.bip39.Mnemonics.MnemonicCode
 import java.nio.ByteBuffer
+import java.security.KeyFactory
 import java.security.KeyPair
-import java.security.KeyPairGenerator
 import java.security.MessageDigest
 import java.security.SecureRandom
+import java.security.Security
 import java.security.Signature
 import java.security.interfaces.ECPrivateKey
-import java.security.spec.ECGenParameterSpec
+import java.security.interfaces.ECPublicKey
+import java.security.spec.ECPrivateKeySpec
+import java.security.spec.ECPublicKeySpec
 import java.security.spec.KeySpec
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair
+import org.bouncycastle.crypto.generators.ECKeyPairGenerator
+import org.bouncycastle.crypto.params.ECDomainParameters
+import org.bouncycastle.crypto.params.ECKeyGenerationParameters
+import org.bouncycastle.crypto.params.ECPrivateKeyParameters
+import org.bouncycastle.crypto.params.ECPublicKeyParameters
+import org.bouncycastle.jce.ECNamedCurveTable
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec
+import org.bouncycastle.jce.spec.ECNamedCurveSpec
+import org.bouncycastle.math.ec.custom.sec.SecP256R1Curve
+
+val ECDSA_POINT_SIZE = 64
 
 /**
  * DeterministicP256 - a class that generates deterministic P-256 keypairs from a BIP39 phrase and a
- * domain-specific origin and userId.
+ * domain-specific origin and userHandle.
  *
  * For generating passkeys intended for FIDO2-based authentication to web services, in a
  * deterministic manner that allows a user to regenerate the same keypair on different devices.
@@ -38,14 +54,21 @@ import javax.crypto.spec.PBEKeySpec
  * iterations. This should only be run once per device, and the derived main key should be stored
  * securely. The mnemonic phrase should only be inputed once and then be discarded by the device.
  *
- * 2) Generate a domain-specific keypair from the derived main key, origin, and userId. The origin
- * is the domain of the service, and the userId is the user's unique identifier on that service. A
- * counter can also be set in case it is pertinent to generate multiple passkeys for a service.
+ * 2) Generate a domain-specific keypair from the derived main key, origin, and userHandle. The
+ * origin is the domain of the service, and the userHandle is the user's unique identifier on that
+ * service. A counter can also be set in case it is pertinent to generate multiple passkeys for a
+ * service.
  *
  * 3) Sign a payload with the domain-specific keypair. The keypairs can be stored and retreived from
  * storage using some secure storage mechanism.
  */
 class DeterministicP256 {
+
+        // Add Bouncy Castle as a security provider
+        init {
+                Security.addProvider(BouncyCastleProvider())
+        }
+
         /**
          * genDerivedMainKeyWithBIP39 - wrapper around genDerivedMainKey that validates the BIP39
          * phrase.
@@ -77,34 +100,94 @@ class DeterministicP256 {
 
         /**
          * genDomainSpecificKeypair - generates a domain-specific keypair from a derived main key,
-         * origin, userid and counter
+         * origin, userHandle and counter
          */
         fun genDomainSpecificKeypair(
                 derivedMainKey: ByteArray,
                 origin: String,
-                userId: String,
+                userHandle: String,
                 counter: Int = 0
         ): KeyPair {
                 val digest = MessageDigest.getInstance("SHA-512")
                 val concat =
                         derivedMainKey +
                                 origin.toByteArray() +
-                                userId.toByteArray() +
+                                userHandle.toByteArray() +
                                 ByteBuffer.allocate(4).putInt(counter).array()
                 val seed = digest.digest(concat)
 
-                val generator: KeyPairGenerator = KeyPairGenerator.getInstance("EC")
+                val curve = SecP256R1Curve()
+                val parameterSpec: ECNamedCurveParameterSpec =
+                        ECNamedCurveTable.getParameterSpec("secp256r1")
 
-                generator.initialize(ECGenParameterSpec("secp256r1"), FixedSecureRandom(seed))
-                return generator.generateKeyPair()
+                val domainParams =
+                        ECDomainParameters(curve, parameterSpec.g, parameterSpec.n, parameterSpec.h)
+                val keyGenParams = ECKeyGenerationParameters(domainParams, FixedSecureRandom(seed))
+                val keyPairGenerator = ECKeyPairGenerator()
+                keyPairGenerator.init(keyGenParams)
+
+                return convertBouncyCastleKeyPairToJavaKeyPair(keyPairGenerator.generateKeyPair())
         }
 
         /** signWithDomainSpecificKeyPair - signs a payload with a domain-specific keypair */
         fun signWithDomainSpecificKeyPair(keyPair: KeyPair, payload: ByteArray): ByteArray {
-                val sig = Signature.getInstance("SHA256withECDSA")
-                sig.initSign(keyPair.private as ECPrivateKey)
+                val sig = Signature.getInstance("SHA256withECDSA", "BC")
+                val privateKey = keyPair.private as ECPrivateKey
+                sig.initSign(privateKey)
                 sig.update(payload)
                 return sig.sign()
+        }
+
+        /**
+         * convertBouncyCastleKeyPairToJavaKeyPair - converts BC-style keypair to
+         * Java.Security-style keypair
+         */
+        fun convertBouncyCastleKeyPairToJavaKeyPair(bcKeyPair: AsymmetricCipherKeyPair): KeyPair {
+                val ecSpec = ECNamedCurveTable.getParameterSpec("secp256r1")
+                val curveSpec =
+                        ECNamedCurveSpec(
+                                ecSpec.name,
+                                ecSpec.curve,
+                                ecSpec.g,
+                                ecSpec.n,
+                                ecSpec.h,
+                                ecSpec.seed
+                        )
+
+                // Extract the private key
+                val bcPrivateKey = bcKeyPair.private as ECPrivateKeyParameters
+                val privateKeySpec = ECPrivateKeySpec(bcPrivateKey.d, curveSpec)
+                val keyFactory = KeyFactory.getInstance("EC")
+                val privateKey = keyFactory.generatePrivate(privateKeySpec) as ECPrivateKey
+
+                // Extract the public key
+                val bcPublicKey = bcKeyPair.public as ECPublicKeyParameters
+                val q = bcPublicKey.q
+                val publicKeySpec =
+                        ECPublicKeySpec(
+                                java.security.spec.ECPoint(
+                                        q.affineXCoord.toBigInteger(),
+                                        q.affineYCoord.toBigInteger()
+                                ),
+                                curveSpec
+                        )
+                val publicKey = keyFactory.generatePublic(publicKeySpec) as ECPublicKey
+
+                return KeyPair(publicKey, privateKey)
+        }
+
+        /**
+         * getPurePKBytes - get the bytes that represent the public key without any metadata
+         * specific to any Kotlin implementation. Useful for deterministically creating FIDO2
+         * Credential IDs across languages.
+         */
+        @OptIn(kotlin.ExperimentalUnsignedTypes::class)
+        fun getPurePKBytes(keyPair: KeyPair): UByteArray {
+                val fullLength = keyPair.public.encoded.size
+                return keyPair.public
+                        .encoded
+                        .copyOfRange(fullLength - ECDSA_POINT_SIZE, fullLength)
+                        .toUByteArray()
         }
 }
 
@@ -121,7 +204,8 @@ class DeterministicP256 {
  * our case: 1) we need it to be deterministic, across platforms 2) we are assuming that the
  * underlying BIP39 phrase was generated securely randomly for the derivedMainKey 3) we are relying
  * on a PBKDF2-HMAC-SHA512 to further harden that derivedMainKey even more and create separation, 4)
- * each keyPair's seed is a hashed concatenatino of the derivedMainKey, origin, userId, and counter.
+ * each keyPair's seed is a hashed concatenatino of the derivedMainKey, origin, userHandle, and
+ * counter.
  *
  * The assumption is that the combination of 2 & 3 & 4 creates enough random entropy to make it safe
  * to generate P-256 keypairs in this way.
