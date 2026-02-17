@@ -15,9 +15,11 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        google()
         mavenCentral()
     }
 }
 
 rootProject.name = "foundation.algorand.deterministicP256"
 include("dP256")
+include("dP256Android")
