@@ -133,6 +133,26 @@ Download/clone the repository, and with gradle setup run `./gradlew build` from 
 
 To only run the tests: `./gradlew test`.
 
+## Artifacts
+
+This repo builds both:
+
+- A JVM `.jar` (module `dP256`)
+- An Android `.aar` (module `dP256Android`)
+
+Build both:
+
+```bash
+./gradlew :dP256:build :dP256Android:assembleRelease
+```
+
+Outputs:
+
+- JVM jar: `dP256/build/libs/dP256-<version>.jar`
+- Android aar: `dP256Android/build/outputs/aar/dP256Android-release.aar`
+
+Note: if you use the `.aar` as a file dependency, Gradle will not automatically pull its transitive dependencies. If your app hits missing classes at compile/runtime, add the same dependencies declared in `dP256Android/build.gradle.kts` to your app.
+
 # LICENSE
 
 Copyright 2024 Algorand Foundation
